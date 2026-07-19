@@ -1,0 +1,13 @@
+diff --git a/node_modules/@notifee/react-native/android/build.gradle b/node_modules/@notifee/react-native/android/build.gradle
+index 7477b94..60771af 100644
+--- a/node_modules/@notifee/react-native/android/build.gradle
++++ b/node_modules/@notifee/react-native/android/build.gradle
+@@ -113,7 +113,7 @@ ReactNative.module.applyReactNativeDependency("api")
+ rootProject.allprojects {
+   repositories {
+     maven {
+-      url "$notifeeDir/android/libs"
++      url file("$notifeeDir/android/libs").toURI().toString()
+     }
+   }
+ }
