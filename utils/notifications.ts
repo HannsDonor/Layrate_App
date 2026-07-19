@@ -4,9 +4,9 @@ import notifee, {
   AuthorizationStatus,
 } from '@notifee/react-native';
 
-const CHANNEL_ID = 'pi-incubator';
+const CHANNEL_ID = 'layrate-monitor';
 const ALERT_CHANNEL_ID = 'layrate-alerts';
-const NOTIFICATION_ID = 'pi-update';
+const NOTIFICATION_ID = 'layrate-status';
 
 export type AlertData = {
   id: number;

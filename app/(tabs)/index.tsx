@@ -10,6 +10,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { fetchWithAuth, getToken, getUser, logout } from '@/utils/auth';
 import { API_BASE_URL } from '@/constants/config';
 import { startBackgroundService, stopBackgroundService, updateBackgroundInterval } from '@/utils/background';
+import { updateWidgetData } from '@/utils/widget';
 
 const FONT_SCALE_KEY = '@layrate_font_scale';
 const POLL_INTERVAL_KEY = '@layrate_poll_interval';
@@ -214,6 +215,15 @@ export default function DashboardScreen() {
         totalHens: result.total_hens,
       });
       setLastUpdated(new Date());
+      const gaugeRatio = result.total_hens > 0
+        ? Math.min(result.egg_count / result.total_hens, 1)
+        : 0;
+      updateWidgetData({
+        eggCount: String(result.egg_count ?? '--'),
+        temperature: result.temperature != null ? `${result.temperature.toFixed(1)}°` : '--°',
+        humidity: result.humidity != null ? `${result.humidity}%` : '--%',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      });
     } catch (err) {
       const isNetworkError = err instanceof TypeError && err.message?.includes('Network request failed');
       const message = isNetworkError
@@ -354,7 +364,7 @@ export default function DashboardScreen() {
                   <MaterialCommunityIcons name="egg" size={26} color="#ffffff" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white text-2xl font-extrabold italic -mb-0.5" style={{ fontFamily: 'serif' }}>
+                  <Text className="text-white text-2xl font-black tracking-wider -mb-0.5" style={{ fontFamily: 'serif' }}>
                     Layrate
                   </Text>
                   {user && (

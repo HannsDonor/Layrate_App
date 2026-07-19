@@ -64,7 +64,7 @@ export default function LoginScreen() {
         </Svg>
         <View className="absolute inset-0 items-center justify-center pb-10">
           <Text
-            className="text-white text-5xl font-extrabold italic tracking-[4px]"
+            className="text-white text-5xl font-black tracking-[6px]"
             style={{ fontFamily: 'serif', textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 }}
           >
             LAYRATE
@@ -140,7 +140,7 @@ export default function LoginScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-white text-lg font-bold italic tracking-[2px]" style={{ fontFamily: 'serif' }}>Login</Text>
+            <Text className="text-white text-lg font-bold tracking-[2px]" style={{ fontFamily: 'serif' }}>Login</Text>
           )}
         </Pressable>
 
@@ -150,7 +150,10 @@ export default function LoginScreen() {
         <View className="mb-6">
           <View className="h-[1px] bg-[#e6e6e6] mb-6" />
           <Pressable
-            onPress={() => Linking.openURL(`${LARAVEL_URL}/login`)}
+            onPress={() => {
+              const url = `${LARAVEL_URL}/login`;
+              Linking.openURL(url).catch((e) => console.error('Linking failed:', url, e));
+            }}
             className="items-center"
           >
             <Text className="text-[#8e8e93] text-base">
@@ -158,6 +161,7 @@ export default function LoginScreen() {
               <Text className="text-primary font-semibold underline">Web Browser</Text>
             </Text>
           </Pressable>
+          <Text className="text-[#b8b8b8] text-xs text-center mt-3">{LARAVEL_URL}</Text>
         </View>
       </ScrollView>
     </View>

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '@/constants/config';
+import { setWidgetLoggedOut } from '@/utils/widget';
 
 const TOKEN_KEY = '@layrate_auth_token';
 const USER_KEY = '@layrate_user';
@@ -66,6 +67,7 @@ export async function clearSession(): Promise<void> {
 
 export async function logout(): Promise<void> {
   await clearSession();
+  setWidgetLoggedOut();
 }
 
 export async function fetchWithAuth(input: string, init: RequestInit = {}): Promise<Response> {

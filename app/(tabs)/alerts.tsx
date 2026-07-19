@@ -3,8 +3,9 @@ import { Animated, FlatList, PanResponder, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient as SvgGradient, Rect, Stop } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { fetchWithAuth } from '@/utils/auth';
 import { type AlertData } from '@/utils/notifications';
-import { LARAVEL_URL, DEVICE_KEY } from '@/constants/config';
+import { API_BASE_URL } from '@/constants/config';
 import { setAlertCount } from '@/utils/alert-count';
 
 const NAVY_0 = '#0A2647';
@@ -50,12 +51,16 @@ export default function AlertsScreen() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const response = await fetch(`${LARAVEL_URL}/api/alerts`, {
-        headers: { 'X-Device-Key': DEVICE_KEY },
-      });
-      if (!response.ok) return;
+      const response = await fetchWithAuth('/api/alerts?is_read=0');
+      setLoading(false);
+      if (!response.ok) {
+        console.error(`Alerts API returned ${response.status}: ${API_BASE_URL}/api/alerts`);
+        setAlertCount(0);
+        return;
+      }
       const body = await response.json();
-      const fetched: AlertData[] = (body.data ?? []).map((a: any) => ({
+      const alertsData = body.alerts ?? body.data ?? [];
+      const fetched: AlertData[] = alertsData.map((a: any) => ({
         id: a.id,
         alert_type: a.alert_type,
         message: a.message,
@@ -64,8 +69,8 @@ export default function AlertsScreen() {
       }));
       setAlerts(fetched);
       setAlertCount(fetched.length);
-      setLoading(false);
-    } catch {
+    } catch (e) {
+      console.error(`Alerts fetch failed: ${API_BASE_URL}/api/alerts`, e);
       setAlertCount(0);
       setLoading(false);
     }
@@ -79,10 +84,7 @@ export default function AlertsScreen() {
 
   const markAsRead = useCallback(async (id: number) => {
     try {
-      const res = await fetch(`${LARAVEL_URL}/api/alerts/${id}/read`, {
-        method: 'PUT',
-        headers: { 'X-Device-Key': DEVICE_KEY },
-      });
+      const res = await fetchWithAuth(`/api/alerts/${id}/read`, { method: 'PUT' });
       if (res.ok) {
         setAlerts((prev) => {
           const next = prev.filter((a) => a.id !== id);
@@ -121,7 +123,7 @@ export default function AlertsScreen() {
                 <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
                   <MaterialCommunityIcons name="bell-outline" size={20} color="#ffffff" />
                 </View>
-                <Text className="text-white text-xl font-extrabold italic" style={{ fontFamily: 'serif' }}>Alerts</Text>
+                <Text className="text-white text-2xl font-black tracking-wider" style={{ fontFamily: 'serif' }}>Alerts</Text>
               </View>
               <View className="px-3.5 py-1.5 rounded-full bg-white/15 border border-white/10">
                 <Text className="text-white text-sm font-bold">{alerts.length}</Text>

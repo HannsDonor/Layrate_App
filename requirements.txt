@@ -1,0 +1,40 @@
+# Layrate Expo App - Dependencies & Requirements
+
+## Android Home Screen Widget (Native, no extra npm packages)
+
+### Architecture
+- Uses Android `AppWidgetProvider` framework (built into SDK)
+- `LayrateWidgetProvider.kt` — reads widget data from SharedPreferences, updates RemoteViews
+- `WidgetDataModule.kt` — NativeModule bridge: `NativeModules.WidgetDataModule.updateWidgetData({ eggCount, temperature, humidity })`
+- `WidgetDataPackage.kt` — Package registration (same pattern as PollServicePackage)
+
+### Template files (in modules/android-widget/, copied by config plugin)
+| File | Destination in android/ |
+|------|------------------------|
+| `LayrateWidgetProvider.kt` | `app/src/main/java/.../LayrateWidgetProvider.kt` |
+| `WidgetDataModule.kt` | `app/src/main/java/.../WidgetDataModule.kt` |
+| `WidgetDataPackage.kt` | `app/src/main/java/.../WidgetDataPackage.kt` |
+| `layrate_widget_info.xml` | `app/src/main/res/xml/layrate_widget_info.xml` |
+| `layrate_widget_layout.xml` | `app/src/main/res/layout/layrate_widget_layout.xml` |
+| `widget_card_bg.xml` | `app/src/main/res/drawable/widget_card_bg.xml` |
+
+### Config plugin
+- `plugins/withAndroidWidget.js` — copies templates, patches AndroidManifest.xml (<receiver>), patches MainApplication.kt (WidgetDataPackage registration)
+
+### Layout (300dp x 130dp min, resizeable)
+- White card with 12dp rounded corners (matches dashboard card style)
+- **"TODAY'S STATS"** label (gray #8e8e93, 9sp, bold)
+- **Egg count** (navy #0A2647, 30sp, bold) with **"eggs today"** subtitle (gray #a39e98, 9sp)
+- Hairline divider (#e6e6e6)
+- **Two-column environment row:**
+  - **Temperature** (orange #dd5b00, 16sp, bold) + "Celsius" (gray)
+  - Vertical divider
+  - **Humidity** (teal #2a9d99, 16sp, bold) + "Percent" (gray)
+- Tap egg count opens the app via PendingIntent
+
+### Data flow
+1. JS polls Flask API → gets eggCount, temperature, humidity
+2. JS calls `NativeModules.WidgetDataModule.updateWidgetData(data)`
+3. Native module writes to `SharedPreferences`, triggers `AppWidgetManager` update
+4. `LayrateWidgetProvider` reads prefs and updates RemoteViews
+5. Tapping egg count opens the app via PendingIntent

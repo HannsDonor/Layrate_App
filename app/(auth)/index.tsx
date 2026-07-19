@@ -4,7 +4,6 @@ import { Redirect } from 'expo-router';
 import { getToken, logout } from '@/utils/auth';
 import { API_BASE_URL } from '@/constants/config';
 import LoginScreen from './login';
-
 export default function AuthIndex() {
   const [session, setSession] = useState<'loading' | 'authenticated' | 'guest'>('loading');
   const [expired, setExpired] = useState(false);

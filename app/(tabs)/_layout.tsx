@@ -3,9 +3,9 @@ import { Pressable, View, Text } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
-import { getToken } from '@/utils/auth';
+import { fetchWithAuth, getToken } from '@/utils/auth';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LARAVEL_URL, DEVICE_KEY } from '@/constants/config';
+import { API_BASE_URL } from '@/constants/config';
 import { setAlertCount } from '@/utils/alert-count';
 
 function AlertsIcon({ color }: { color: string }) {
@@ -14,9 +14,7 @@ function AlertsIcon({ color }: { color: string }) {
 
   const updateCount = useCallback(async () => {
     try {
-      const res = await fetch(`${LARAVEL_URL}/api/alerts`, {
-        headers: { 'X-Device-Key': DEVICE_KEY },
-      });
+      const res = await fetchWithAuth('/api/alerts?is_read=0');
       if (res.ok) {
         const body = await res.json();
         const total = Array.isArray(body.data) ? body.data.length : 0;
