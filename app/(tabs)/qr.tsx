@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -48,9 +48,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function QRScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
-  const [screen, setScreen] = useState<'scan' | 'result' | 'error' | 'manual'>('scan');
+  const [screen, setScreen] = useState<'scan' | 'result' | 'error'>('scan');
   const [batch, setBatch] = useState<BatchData | null>(null);
-  const [manualId, setManualId] = useState('');
 
   const handleBarCodeScanned = useCallback(({ data }: { data: string }) => {
     const parsed = parseQR(data);
@@ -64,22 +63,8 @@ export default function QRScreen() {
 
   const resetScan = useCallback(() => {
     setBatch(null);
-    setManualId('');
     setScreen('scan');
   }, []);
-
-  const handleManualSubmit = useCallback(() => {
-    const trimmed = manualId.trim();
-    if (!trimmed) return;
-    setBatch({
-      batchId: trimmed,
-      harvestedDate: '2026-07-15',
-      cageCode: 'CAGE-A',
-      eggSize: 'medium',
-      count: 360,
-    });
-    setScreen('result');
-  }, [manualId]);
 
   if (!permission) {
     return (
@@ -168,9 +153,6 @@ export default function QRScreen() {
               <MaterialCommunityIcons name="qrcode-scan" size={18} color="#004e9a" />
               <Text className="text-primary text-sm font-medium">Scan Another Code</Text>
             </Pressable>
-            <Pressable onPress={() => setScreen('manual')}>
-              <Text className="text-faint-ink text-sm underline">Enter Batch ID Manually</Text>
-            </Pressable>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -193,44 +175,6 @@ export default function QRScreen() {
             >
               <MaterialCommunityIcons name="camera" size={18} color="#ffffff" />
               <Text className="text-white text-sm font-semibold">Scan Again</Text>
-            </Pressable>
-          </View>
-          <Pressable onPress={() => setScreen('manual')}>
-            <Text className="text-faint-ink text-sm underline">Enter Batch ID Manually</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (screen === 'manual') {
-    return (
-      <SafeAreaView className="flex-1 bg-paper">
-        <View className="flex-1 items-center justify-center px-8">
-          <View className="bg-white rounded-card p-8 items-center gap-4 border border-hairline w-full max-w-sm">
-            <MaterialCommunityIcons name="keyboard-outline" size={40} color="#004e9a" />
-            <Text className="text-ink text-lg font-bold">Enter Batch ID</Text>
-            <Text className="text-muted-ink text-sm text-center leading-5">
-              Type the batch number printed on the crate label
-            </Text>
-            <TextInput
-              className="border border-hairline rounded-button px-4 py-3 text-lg font-semibold text-ink bg-paper w-full text-center"
-              placeholder="e.g. 42"
-              placeholderTextColor="#a39e98"
-              value={manualId}
-              onChangeText={setManualId}
-              keyboardType="number-pad"
-            />
-            <Pressable
-              onPress={handleManualSubmit}
-              disabled={!manualId.trim()}
-              className={`bg-primary py-3.5 px-8 rounded-button w-full items-center active:bg-primary-pressed ${!manualId.trim() ? 'opacity-50' : ''}`}
-            >
-              <Text className="text-white text-base font-semibold">Look Up</Text>
-            </Pressable>
-            <Pressable onPress={resetScan} className="flex-row items-center gap-2 py-2">
-              <MaterialCommunityIcons name="qrcode-scan" size={18} color="#004e9a" />
-              <Text className="text-primary text-sm font-medium">Scan QR Instead</Text>
             </Pressable>
           </View>
         </View>
@@ -278,12 +222,6 @@ export default function QRScreen() {
           </View>
         </CameraView>
 
-        <Pressable
-          onPress={() => setScreen('manual')}
-          className="absolute bottom-6 self-center px-5 py-2 bg-black/50 rounded-button"
-        >
-          <Text className="text-white/80 text-xs underline">Enter Batch ID Manually</Text>
-        </Pressable>
       </View>
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -16,12 +16,44 @@ import { login } from '@/utils/auth';
 import { LARAVEL_URL } from '@/constants/config';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+function DotPattern({ color }: { color?: string }) {
+  const dots: { cx: number; cy: number }[] = [];
+  for (let row = 0; row < 30; row++) {
+    for (let col = 0; col < 12; col++) {
+      dots.push({ cx: 30 + col * 30 + (row % 2) * 15, cy: 40 + row * 30 });
+    }
+  }
+  const fill = color ?? 'rgba(200,200,210,0.18)';
+  return (
+    <Svg style={{ position: 'absolute', width: '100%', height: '100%' }}>
+      {dots.map((d, i) => (
+        <Circle key={i} cx={d.cx} cy={d.cy} r={1.2} fill={fill} />
+      ))}
+    </Svg>
+  );
+}
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const doodles = useMemo(() => {
+    const result: { icon: string; x: number; y: number; size: number; rotation: number; opacity: number }[] = [];
+    for (let i = 0; i < 40; i++) {
+      result.push({
+        icon: 'egg',
+        x: Math.random() * 90 + 5,
+        y: Math.random() * 80 + 10,
+        size: Math.random() * 18 + 16,
+        rotation: Math.random() * 60 - 30,
+        opacity: Math.random() * 0.09 + 0.05,
+      });
+    }
+    return result;
+  }, []);
 
   useEffect(() => {
     NavigationBar.setBackgroundColorAsync('#0A2647');
@@ -49,7 +81,7 @@ export default function LoginScreen() {
     <View className="flex-1 bg-white">
       <StatusBar style="light" />
       {/* Gradient wave header */}
-      <View className="h-[280px]">
+      <View className="h-[280px]" style={{ zIndex: 1 }}>
         <Svg width="100%" height="100%" viewBox="0 0 375 280" preserveAspectRatio="xMidYMid slice">
           <Defs>
             <SvgGradient id="headerGrad" x1="0" y1="0" x2="1" y2="1">
@@ -62,6 +94,24 @@ export default function LoginScreen() {
             fill="url(#headerGrad)"
           />
         </Svg>
+        {/* Doodle icons */}
+        <View className="absolute inset-0" pointerEvents="none">
+          {doodles.map((d, i) => (
+            <View
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${d.x}%`,
+                top: `${d.y}%`,
+                transform: [{ rotate: `${d.rotation}deg` }],
+                opacity: d.opacity,
+              }}
+            >
+              <MaterialCommunityIcons name={d.icon as any} size={d.size} color="#ffffff" />
+            </View>
+          ))}
+        </View>
+
         <View className="absolute inset-0 items-center justify-center pb-10">
           <Text
             className="text-white text-5xl font-black tracking-[6px]"
@@ -78,6 +128,7 @@ export default function LoginScreen() {
         </View>
       </View>
 
+      <DotPattern color="rgba(200,200,210,0.18)" />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         className="flex-1 mt-6"
@@ -161,7 +212,6 @@ export default function LoginScreen() {
               <Text className="text-primary font-semibold underline">Web Browser</Text>
             </Text>
           </Pressable>
-          <Text className="text-[#b8b8b8] text-xs text-center mt-3">{LARAVEL_URL}</Text>
         </View>
       </ScrollView>
     </View>

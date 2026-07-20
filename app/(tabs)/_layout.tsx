@@ -1,43 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
-import { fetchWithAuth, getToken } from '@/utils/auth';
+import { getToken } from '@/utils/auth';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { API_BASE_URL } from '@/constants/config';
-import { setAlertCount } from '@/utils/alert-count';
+import { getAlertCount } from '@/utils/alert-count';
+import { SettingsProvider } from '@/app/contexts/SettingsContext';
 
 function AlertsIcon({ color }: { color: string }) {
   const [count, setCount] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const updateCount = useCallback(async () => {
-    try {
-      const res = await fetchWithAuth('/api/alerts?is_read=0');
-      if (res.ok) {
-        const body = await res.json();
-        const total = Array.isArray(body.data) ? body.data.length : 0;
-        setAlertCount(total);
-        setCount(total);
-      }
-    } catch {}
-  }, []);
 
   useEffect(() => {
-    updateCount();
-    intervalRef.current = setInterval(updateCount, 60000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [updateCount]);
+    const interval = setInterval(() => {
+      setCount(getAlertCount());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View>
       <MaterialCommunityIcons name="bell-outline" size={28} color={color} />
       {count > 0 && (
-        <View className="absolute -top-1 -right-[12px] bg-primary min-w-[24px] h-[24px] rounded-full items-center justify-center px-[5px]">
-          <Text className="text-white text-xs font-bold">
+        <View className="absolute -top-2 right-[-6px] min-w-[22px] h-[22px] rounded-full items-center justify-center px-[5px]"
+              style={{ backgroundColor: '#dd5b00', elevation: 4, shadowColor: '#dd5b00', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 3 }}>
+          <Text className="text-white text-[11px] font-bold">
             {count > 99 ? '99+' : count}
           </Text>
         </View>
@@ -79,7 +66,7 @@ export default function TabsGroupLayout() {
   }, []);
 
   return (
-    <>
+    <SettingsProvider>
       <StatusBar style="dark" />
       <Tabs screenOptions={{
       headerShown: false,
@@ -124,6 +111,6 @@ export default function TabsGroupLayout() {
         }}
       />
     </Tabs>
-    </>
+    </SettingsProvider>
   );
 }
