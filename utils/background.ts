@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, LARAVEL_URL, DEVICE_KEY } from '@/constants/config';
+import { getApiBaseUrl, getLaravelUrl, DEVICE_KEY } from '@/constants/config';
 import { getToken } from '@/utils/auth';
 
 const POLL_INTERVAL_KEY = '@layrate_poll_interval';
@@ -37,8 +37,8 @@ export async function startBackgroundService() {
 
   try {
     mod.startService({
-      flaskUrl: API_BASE_URL,
-      laravelUrl: LARAVEL_URL,
+      flaskUrl: getApiBaseUrl(),
+      laravelUrl: getLaravelUrl(),
       deviceKey: DEVICE_KEY,
       token,
       pollIntervalMs,

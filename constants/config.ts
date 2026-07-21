@@ -21,13 +21,20 @@ function resolveHost(): string {
   return '127.0.0.1';
 }
 
-const host = resolveHost();
-
-export let API_BASE_URL = `http://${host}:5000`;
-export let LARAVEL_URL = `http://${host}:8000`;
+const _host = resolveHost();
+let _apiBaseUrl = `http://${_host}:5000`;
+let _laravelUrl = `http://${_host}:8000`;
 export const DEVICE_KEY = 'lr_3EXO8fHo5wXRfk4gl2pImfNJyaX817OdbNWL4syf';
 
+export function getApiBaseUrl(): string {
+  return _apiBaseUrl;
+}
+
+export function getLaravelUrl(): string {
+  return _laravelUrl;
+}
+
 export function setApiBaseUrl(url: string) {
-  API_BASE_URL = url;
-  LARAVEL_URL = url.replace(':5000', ':8000');
+  _apiBaseUrl = url;
+  _laravelUrl = url.replace(':5000', ':8000');
 }

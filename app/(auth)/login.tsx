@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import { login } from '@/utils/auth';
-import { setApiBaseUrl, LARAVEL_URL } from '@/constants/config';
+import { setApiBaseUrl, getLaravelUrl } from '@/constants/config';
 import { discoverServer, getSavedServerUrl, saveServerUrl } from '@/utils/serviceDiscovery';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -257,7 +257,7 @@ export default function LoginScreen() {
           <View className="h-[1px] bg-[#e6e6e6] mb-6" />
           <Pressable
             onPress={() => {
-              const url = `${LARAVEL_URL}/login`;
+              const url = `${getLaravelUrl()}/login`;
               Linking.openURL(url).catch((e) => console.error('Linking failed:', url, e));
             }}
             className="items-center"

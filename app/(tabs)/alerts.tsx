@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { fetchWithAuth, getUser, logout } from '@/utils/auth';
 import { type AlertData } from '@/utils/notifications';
-import { API_BASE_URL, LARAVEL_URL } from '@/constants/config';
+import { getApiBaseUrl, getLaravelUrl } from '@/constants/config';
 import { setAlertCount } from '@/utils/alert-count';
 import { stopBackgroundService } from '@/utils/background';
 import { useSettings } from '@/app/contexts/SettingsContext';
@@ -92,7 +92,7 @@ export default function AlertsScreen() {
       const response = await fetchWithAuth('/api/alerts?is_read=0');
       setLoading(false);
       if (!response.ok) {
-        console.error(`Alerts API returned ${response.status}: ${API_BASE_URL}/api/alerts`);
+        console.error(`Alerts API returned ${response.status}: ${getApiBaseUrl()}/api/alerts`);
         setAlertCount(0);
         return;
       }
@@ -109,7 +109,7 @@ export default function AlertsScreen() {
       setAlerts(fetched);
       setAlertCount(fetched.length);
     } catch (e) {
-      console.error(`Alerts fetch failed: ${API_BASE_URL}/api/alerts`, e);
+      console.error(`Alerts fetch failed: ${getApiBaseUrl()}/api/alerts`, e);
       setAlertCount(0);
       setLoading(false);
     }
@@ -357,7 +357,7 @@ export default function AlertsScreen() {
             <View className="flex-row justify-between">
               <Pressable
                 onPress={() => {
-                  const url = `${LARAVEL_URL}/login`;
+                  const url = `${getLaravelUrl()}/login`;
                   Linking.openURL(url).catch((e) => console.error('Linking failed:', url, e));
                 }}
                 className="flex-row items-center gap-2 py-3 px-4 rounded-[8px] active:opacity-80"

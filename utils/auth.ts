@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '@/constants/config';
+import { getApiBaseUrl } from '@/constants/config';
 import { setWidgetLoggedOut } from '@/utils/widget';
 
 const TOKEN_KEY = '@layrate_auth_token';
@@ -22,7 +22,7 @@ export type LoginResponse = {
 };
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/login`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export async function fetchWithAuth(input: string, init: RequestInit = {}): Prom
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
-  return fetch(`${API_BASE_URL}${input}`, {
+  return fetch(`${getApiBaseUrl()}${input}`, {
     ...init,
     headers,
   });

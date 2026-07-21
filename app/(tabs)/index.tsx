@@ -8,7 +8,7 @@ import * as NavigationBar from 'expo-navigation-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { fetchWithAuth, getToken, getUser, logout } from '@/utils/auth';
-import { API_BASE_URL, LARAVEL_URL } from '@/constants/config';
+import { getApiBaseUrl, getLaravelUrl } from '@/constants/config';
 import { startBackgroundService, stopBackgroundService, updateBackgroundInterval } from '@/utils/background';
 import { updateWidgetData } from '@/utils/widget';
 import { useSettings } from '@/app/contexts/SettingsContext';
@@ -322,7 +322,7 @@ export default function DashboardScreen() {
       try {
         const token = await getToken();
         if (!token || cancelled) return;
-        const res = await fetch(`${API_BASE_URL}/api/dashboard/status`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/dashboard/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.status === 401 && !cancelled) {
@@ -366,7 +366,7 @@ export default function DashboardScreen() {
         try {
           const token = await getToken();
           if (!token) return;
-          const res = await fetch(`${API_BASE_URL}/api/dashboard/status`, {
+          const res = await fetch(`${getApiBaseUrl()}/api/dashboard/status`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.status === 401) {
@@ -653,7 +653,7 @@ export default function DashboardScreen() {
             <View className="flex-row justify-between">
               <Pressable
                 onPress={() => {
-                  const url = `${LARAVEL_URL}/login`;
+                  const url = `${getLaravelUrl()}/login`;
                   Linking.openURL(url).catch((e) => console.error('Linking failed:', url, e));
                 }}
                 className="flex-row items-center gap-2 py-3 px-4 rounded-[8px] active:opacity-80"

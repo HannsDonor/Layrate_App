@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { Redirect } from 'expo-router';
 import { getToken, logout } from '@/utils/auth';
-import { API_BASE_URL } from '@/constants/config';
+import { getApiBaseUrl } from '@/constants/config';
 import LoginScreen from './login';
 export default function AuthIndex() {
   const [session, setSession] = useState<'loading' | 'authenticated' | 'guest'>('loading');
@@ -17,7 +17,7 @@ export default function AuthIndex() {
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/dashboard/status`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/dashboard/status`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
