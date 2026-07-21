@@ -96,6 +96,11 @@ function withAndroidManifestMod(config) {
       manifest['uses-permission'].push({ $: { 'android:name': 'android.permission.FOREGROUND_SERVICE_DATA_SYNC' } });
     }
 
+    if (manifest.application?.[0]?.$?.['android:usesCleartextTraffic'] !== 'true') {
+      if (!manifest.application[0].$) manifest.application[0].$ = {};
+      manifest.application[0].$['android:usesCleartextTraffic'] = 'true';
+    }
+
     return manifestConfig;
   });
 }

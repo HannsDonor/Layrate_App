@@ -13,7 +13,8 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import { login } from '@/utils/auth';
-import { LARAVEL_URL } from '@/constants/config';
+import { setApiBaseUrl, LARAVEL_URL } from '@/constants/config';
+import { discoverServer, getSavedServerUrl, saveServerUrl } from '@/utils/serviceDiscovery';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 function DotPattern({ color }: { color?: string }) {
@@ -39,6 +40,9 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState('');
+  const [showServerInput, setShowServerInput] = useState(false);
+  const [discoveryStatus, setDiscoveryStatus] = useState<'scanning' | 'found' | 'not-found' | 'saved' | 'idle'>('idle');
 
   const doodles = useMemo(() => {
     const result: { icon: string; x: number; y: number; size: number; rotation: number; opacity: number }[] = [];
@@ -60,10 +64,36 @@ export default function LoginScreen() {
     NavigationBar.setButtonStyleAsync('light');
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const saved = await getSavedServerUrl();
+      if (saved) {
+        setServerUrl(saved);
+        setDiscoveryStatus('saved');
+        setApiBaseUrl(saved);
+        return;
+      }
+      setDiscoveryStatus('scanning');
+      const found = await discoverServer();
+      if (found) {
+        setServerUrl(found);
+        setDiscoveryStatus('found');
+        setApiBaseUrl(found);
+        saveServerUrl(found);
+      } else {
+        setDiscoveryStatus('not-found');
+      }
+    })();
+  }, []);
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password');
       return;
+    }
+    if (serverUrl) {
+      await saveServerUrl(serverUrl);
+      setApiBaseUrl(serverUrl);
     }
     setLoading(true);
     setError(null);
@@ -179,6 +209,31 @@ export default function LoginScreen() {
 
         {error && (
           <Text className="text-accent text-sm text-center mb-4">{error}</Text>
+        )}
+
+        {/* Server section */}
+        <Pressable onPress={() => setShowServerInput((v) => !v)} className="mb-4 items-center">
+          <Text className="text-[#8e8e93] text-xs underline">
+            {showServerInput ? 'Hide' : 'Server'} —{' '}
+            {discoveryStatus === 'scanning' ? 'Scanning...' :
+             discoveryStatus === 'found' ? `Found ${serverUrl}` :
+             discoveryStatus === 'saved' ? `Saved ${serverUrl}` :
+             discoveryStatus === 'not-found' ? 'Not found, enter manually' :
+             'Tap to configure'}
+          </Text>
+        </Pressable>
+        {showServerInput && (
+          <TextInput
+            className="bg-[#F0F0F5] rounded-full px-6 py-[18px] text-base text-ink mb-4"
+            placeholder="e.g. http://192.168.1.100:5000"
+            placeholderTextColor="#a39e98"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            value={serverUrl}
+            onChangeText={(t) => { setServerUrl(t); setDiscoveryStatus('idle'); }}
+            editable={!loading}
+          />
         )}
 
         {/* Login button */}
