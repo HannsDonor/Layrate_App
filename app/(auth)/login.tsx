@@ -43,6 +43,28 @@ export default function LoginScreen() {
   const [serverUrl, setServerUrl] = useState('');
   const [showServerInput, setShowServerInput] = useState(false);
   const [discoveryStatus, setDiscoveryStatus] = useState<'scanning' | 'found' | 'not-found' | 'saved' | 'idle'>('idle');
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
+  const [testResult, setTestResult] = useState('');
+
+  const handleTestServer = async () => {
+    const url = serverUrl || 'http://192.168.254.107:5000';
+    setTestStatus('testing');
+    setTestResult('');
+    try {
+      const res = await fetch(`${url}/api/ping`, { method: 'GET', signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setTestStatus('ok');
+        setTestResult(`OK (${res.status})`);
+      } else {
+        setTestStatus('fail');
+        setTestResult(`Response ${res.status}`);
+      }
+    } catch (e: any) {
+      setTestStatus('fail');
+      setTestResult(e.message || 'Network error');
+    }
+  };
 
   const doodles = useMemo(() => {
     const result: { icon: string; x: number; y: number; size: number; rotation: number; opacity: number }[] = [];
@@ -236,7 +258,7 @@ export default function LoginScreen() {
           />
         )}
 
-        {/* Server URL status */}
+        {/* Server URL status + test */}
         <View className="mb-3 items-center">
           <Text className={`text-xs ${discoveryStatus === 'found' || discoveryStatus === 'saved' ? 'text-green-600' : 'text-[#8e8e93]'}`}>
             {discoveryStatus === 'scanning' ? 'Scanning for server...' :
@@ -245,6 +267,18 @@ export default function LoginScreen() {
              discoveryStatus === 'not-found' ? `Fallback: http://192.168.254.107:5000` :
              `Server: http://192.168.254.107:5000`}
           </Text>
+          <View className="flex-row items-center mt-1 gap-2">
+            <Pressable onPress={handleTestServer} disabled={testStatus === 'testing'}>
+              <Text className="text-primary text-xs font-semibold underline">
+                {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+              </Text>
+            </Pressable>
+            {testStatus !== 'idle' && (
+              <Text className={`text-xs ${testStatus === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+                {testResult}
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Login button */}
