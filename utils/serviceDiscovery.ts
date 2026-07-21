@@ -12,33 +12,41 @@ try {
 function discoverMdns(timeout: number): Promise<string | null> {
   if (!Zeroconf) return Promise.resolve(null);
 
-  return new Promise((resolve) => {
-    const zc = new Zeroconf();
-    const timer = setTimeout(() => {
-      zc.stop();
-      zc.removeDeviceListeners();
-      resolve(null);
-    }, timeout);
+  try {
+    return new Promise((resolve) => {
+      try {
+        const zc = new Zeroconf();
+        const timer = setTimeout(() => {
+          try { zc.stop(); } catch {}
+          try { zc.removeDeviceListeners(); } catch {}
+          resolve(null);
+        }, timeout);
 
-    zc.on('resolved', (service: any) => {
-      if (service.name === 'Layrate Server') {
-        clearTimeout(timer);
-        zc.stop();
-        zc.removeDeviceListeners();
-        const ip = service.host || (service.addresses && service.addresses[0]);
-        resolve(ip ? `http://${ip}:${service.port}` : null);
+        zc.on('resolved', (service: any) => {
+          if (service.name === 'Layrate Server') {
+            clearTimeout(timer);
+            try { zc.stop(); } catch {}
+            try { zc.removeDeviceListeners(); } catch {}
+            const ip = service.host || (service.addresses && service.addresses[0]);
+            resolve(ip ? `http://${ip}:${service.port}` : null);
+          }
+        });
+
+        zc.on('error', () => {
+          clearTimeout(timer);
+          try { zc.stop(); } catch {}
+          try { zc.removeDeviceListeners(); } catch {}
+          resolve(null);
+        });
+
+        zc.scan('http', 'tcp', 'local.');
+      } catch {
+        resolve(null);
       }
     });
-
-    zc.on('error', () => {
-      clearTimeout(timer);
-      zc.stop();
-      zc.removeDeviceListeners();
-      resolve(null);
-    });
-
-    zc.scan('http', 'tcp', 'local.');
-  });
+  } catch {
+    return Promise.resolve(null);
+  }
 }
 
 // ── Fallback: full /24 subnet scan via HTTP probe ───────────────────────
