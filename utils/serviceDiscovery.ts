@@ -22,18 +22,7 @@ async function scanSubnet(deviceIp: string): Promise<string | null> {
   if (parts.length !== 4) return null;
   const subnet = parts.slice(0, 3).join('.');
 
-  const candidates = [
-    `${subnet}.1`,
-    `${subnet}.100`,
-    `${subnet}.101`,
-    `${subnet}.102`,
-    `${subnet}.150`,
-    `${subnet}.200`,
-    `${subnet}.254`,
-    `${subnet}.2`,
-    `${subnet}.10`,
-    `${subnet}.50`,
-  ];
+  const candidates = Array.from({ length: 254 }, (_, i) => `${subnet}.${i + 1}`);
 
   const results = await Promise.allSettled(
     candidates.map(async (ip) => {
