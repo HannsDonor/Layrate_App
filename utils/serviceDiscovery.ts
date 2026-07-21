@@ -7,7 +7,7 @@ async function probeIp(ip: string, timeoutMs = 800): Promise<boolean> {
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
-    const resp = await fetch(`http://${ip}:5000/api/dashboard/status`, {
+    const resp = await fetch(`http://${ip}:5000/api/ping`, {
       signal: controller.signal,
     });
     clearTimeout(id);
