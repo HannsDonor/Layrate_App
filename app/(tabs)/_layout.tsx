@@ -3,19 +3,35 @@ import { Pressable, View, Text } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
-import { getToken } from '@/utils/auth';
+import { fetchWithAuth, getToken } from '@/utils/auth';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { getAlertCount } from '@/utils/alert-count';
+import { setAlertCount } from '@/utils/alert-count';
 import { SettingsProvider } from '@/app/contexts/SettingsContext';
 
 function AlertsIcon({ color }: { color: string }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCount(getAlertCount());
-    }, 1000);
-    return () => clearInterval(interval);
+    let active = true;
+
+    const fetchCount = async () => {
+      try {
+        const res = await fetchWithAuth('/api/alerts?is_read=0');
+        if (!res.ok || !active) return;
+        const body = await res.json();
+        const alertsData = body.alerts ?? body.data ?? [];
+        const total = Array.isArray(alertsData) ? alertsData.length : 0;
+        setCount(total);
+        setAlertCount(total);
+      } catch {}
+    };
+
+    fetchCount();
+    const interval = setInterval(fetchCount, 5000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (

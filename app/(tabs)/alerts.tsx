@@ -130,9 +130,10 @@ export default function AlertsScreen() {
           setAlertCount(next.length);
           return next;
         });
+        fetchAlerts();
       }
     } catch {}
-  }, []);
+  }, [fetchAlerts]);
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);

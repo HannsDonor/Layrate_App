@@ -31,6 +31,9 @@ class ForegroundPollService : Service() {
     private var lastTemperature = "--°C"
     private var lastHumidity = "--%"
     private var lastEggCount = 0
+    private var lastNotifiedTemperature = "--°C"
+    private var lastNotifiedHumidity = "--%"
+    private var lastNotifiedEggCount = -1
     private val seenAlertIds = mutableSetOf<Int>()
     private var started = false
 
@@ -46,6 +49,7 @@ class ForegroundPollService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.i(TAG, "onCreate")
+        Log.d(TAG_NOTIF, "SERVICE_CREATED_V2")
         createNotificationChannels()
     }
 
@@ -125,13 +129,16 @@ class ForegroundPollService : Service() {
             CHANNEL_STATUS, "Layrate Monitor", NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
             description = "Persistent monitoring status"
-            setShowBadge(true)
+            setSound(null, null)
+            enableVibration(false)
+            setShowBadge(false)
+            enableLights(false)
         }
         nm.createNotificationChannel(statusChannel)
         Log.d(TAG, "Status channel created")
 
         val alertChannel = NotificationChannel(
-            CHANNEL_ALERTS, "Farm Alerts", NotificationManager.IMPORTANCE_HIGH
+            CHANNEL_ALERTS, "Farm Alerts", NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = "Incubator alert notifications"
             enableVibration(true)
@@ -148,6 +155,7 @@ class ForegroundPollService : Service() {
         started = true
 
         try {
+            Log.d(TAG_NOTIF, "startForeground() called V2 — ID=$NOTIFICATION_ID_PERSISTENT, channel=$CHANNEL_STATUS")
             val notification = buildPersistentNotification(lastTemperature, lastHumidity, lastEggCount)
             startForeground(NOTIFICATION_ID_PERSISTENT, notification)
             Log.i(TAG, "startForeground() succeeded, interval=$pollIntervalMs")
@@ -270,9 +278,9 @@ class ForegroundPollService : Service() {
     }
 
     private fun showPersistentNotification(temp: String, hum: String, eggs: Int) {
-        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        Log.d(TAG_NOTIF, "startForeground() UPDATE — ID=$NOTIFICATION_ID_PERSISTENT, channel=$CHANNEL_STATUS, temp=$temp, hum=$hum, eggs=$eggs, isFirstUpdate=${lastNotifiedEggCount == -1}")
         val notification = buildPersistentNotification(temp, hum, eggs)
-        nm.notify(NOTIFICATION_ID_PERSISTENT, notification)
+        startForeground(NOTIFICATION_ID_PERSISTENT, notification)
     }
 
     private fun buildPersistentNotification(temp: String, hum: String, eggs: Int): Notification {
@@ -288,6 +296,7 @@ class ForegroundPollService : Service() {
             .setSmallIcon(android.R.drawable.ic_menu_compass)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .setShowWhen(true)
 
@@ -301,6 +310,7 @@ class ForegroundPollService : Service() {
     private fun showAlertNotification(alertType: String, message: String, cageCode: String, alertId: Int) {
         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val location = if (cageCode.isNotEmpty()) " ($cageCode)" else ""
+        Log.d(TAG_NOTIF, "notify() ALERT — ID=${NOTIFICATION_ID_ALERT_BASE + alertId}, channel=$CHANNEL_ALERTS, type=$alertType$location")
 
         val openIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = PendingIntent.getActivity(
@@ -315,7 +325,6 @@ class ForegroundPollService : Service() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setShowWhen(true)
-            .setDefaults(Notification.DEFAULT_SOUND or Notification.DEFAULT_VIBRATE)
             .build()
 
         nm.notify(NOTIFICATION_ID_ALERT_BASE + alertId, notification)
@@ -323,6 +332,7 @@ class ForegroundPollService : Service() {
 
     private fun showAuthFailedNotification() {
         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        Log.d(TAG_NOTIF, "notify() AUTH_FAILED — ID=$NOTIFICATION_ID_AUTH_FAILED, channel=$CHANNEL_ALERTS, hasSound=true")
         val openIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, openIntent,
@@ -361,6 +371,7 @@ class ForegroundPollService : Service() {
 
     companion object {
         private const val TAG = "ForegroundPollService"
+        private const val TAG_NOTIF = "Layrate-Notify"
         private const val PREFS_NAME = "layrate_poll_service"
 
         const val ACTION_STOP = "com.anonymous.Layrate.STOP"
@@ -372,8 +383,8 @@ class ForegroundPollService : Service() {
         const val EXTRA_AUTH_TOKEN = "token"
         const val EXTRA_POLL_INTERVAL = "pollIntervalMs"
 
-        const val CHANNEL_STATUS = "layrate-foreground"
-        const val CHANNEL_ALERTS = "layrate-alerts"
+        const val CHANNEL_STATUS = "layrate-foreground-v3"
+        const val CHANNEL_ALERTS = "layrate-alerts-v3"
 
         private const val NOTIFICATION_ID_PERSISTENT = 1
         private const val NOTIFICATION_ID_ALERT_BASE = 1000
