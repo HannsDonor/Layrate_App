@@ -33,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withAndroidWidget",
       "./plugins/withNotifeeMaven",
       [
         "expo-camera",
