@@ -35,6 +35,7 @@ export function getLaravelUrl(): string {
 }
 
 export function setApiBaseUrl(url: string) {
-  _apiBaseUrl = url;
-  _laravelUrl = url.replace(':5000', ':8000');
+  const normalized = url.includes('://') ? url : `http://${url}`;
+  _apiBaseUrl = normalized;
+  _laravelUrl = normalized.replace(':5000', ':8000');
 }

@@ -22,7 +22,9 @@ export type LoginResponse = {
 };
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await fetch(`${getApiBaseUrl()}/api/login`, {
+  const url = `${getApiBaseUrl()}/api/login`;
+  console.log('[auth] login url:', url);
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
