@@ -42,7 +42,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState('');
   const [showServerInput, setShowServerInput] = useState(false);
-  const [discoveryStatus, setDiscoveryStatus] = useState<'scanning' | 'found' | 'not-found' | 'saved' | 'idle'>('idle');
+  const [discoveryStatus, setDiscoveryStatus] = useState<'scanning' | 'found' | 'saved' | 'idle'>('idle');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
   const [testResult, setTestResult] = useState('');
 
@@ -106,7 +106,10 @@ export default function LoginScreen() {
         setApiBaseUrl(found);
         saveServerUrl(found);
       } else {
-        setDiscoveryStatus('not-found');
+        const fallback = 'http://192.168.254.107:5000';
+        setServerUrl(fallback);
+        setDiscoveryStatus('idle');
+        setApiBaseUrl(fallback);
       }
     })();
   }, []);
@@ -243,7 +246,6 @@ export default function LoginScreen() {
             {discoveryStatus === 'scanning' ? 'Scanning...' :
              discoveryStatus === 'found' ? `Found ${serverUrl}` :
              discoveryStatus === 'saved' ? `Saved ${serverUrl}` :
-             discoveryStatus === 'not-found' ? 'Not found, enter manually' :
              'Tap to configure'}
           </Text>
         </Pressable>
@@ -267,7 +269,6 @@ export default function LoginScreen() {
             {discoveryStatus === 'scanning' ? 'Scanning for server...' :
              discoveryStatus === 'found' ? `Server: ${serverUrl}` :
              discoveryStatus === 'saved' ? `Server: ${serverUrl}` :
-             discoveryStatus === 'not-found' ? `Fallback: http://192.168.254.107:5000` :
              `Server: http://192.168.254.107:5000`}
           </Text>
           <View className="flex-row items-center mt-1 gap-2">
