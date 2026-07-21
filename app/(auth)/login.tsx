@@ -236,6 +236,17 @@ export default function LoginScreen() {
           />
         )}
 
+        {/* Server URL status */}
+        <View className="mb-3 items-center">
+          <Text className={`text-xs ${discoveryStatus === 'found' || discoveryStatus === 'saved' ? 'text-green-600' : 'text-[#8e8e93]'}`}>
+            {discoveryStatus === 'scanning' ? 'Scanning for server...' :
+             discoveryStatus === 'found' ? `Server: ${serverUrl}` :
+             discoveryStatus === 'saved' ? `Server: ${serverUrl}` :
+             discoveryStatus === 'not-found' ? `Fallback: http://192.168.254.107:5000` :
+             `Server: http://192.168.254.107:5000`}
+          </Text>
+        </View>
+
         {/* Login button */}
         <Pressable
           onPress={handleLogin}

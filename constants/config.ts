@@ -15,8 +15,9 @@ function resolveHost(): string {
   if (hostUri) {
     return hostUri.split(':')[0];
   }
+  // Standalone APK or emulator
   if (Platform.OS === 'android') {
-    return '10.0.2.2';
+    return '192.168.254.107';
   }
   return '127.0.0.1';
 }
