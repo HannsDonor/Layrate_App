@@ -101,6 +101,14 @@ function withAndroidManifestMod(config) {
       manifest.application[0].$['android:usesCleartextTraffic'] = 'true';
     }
 
+    const mdnsp = ['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'];
+    for (const perm of mdnsp) {
+      if (!manifest['uses-permission']?.some(p => p.$?.['android:name'] === perm)) {
+        if (!manifest['uses-permission']) manifest['uses-permission'] = [];
+        manifest['uses-permission'].push({ $: { 'android:name': perm } });
+      }
+    }
+
     return manifestConfig;
   });
 }

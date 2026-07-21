@@ -1,54 +1,46 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Network from 'expo-network';
+import Zeroconf from 'react-native-zeroconf';
 
 const STORAGE_KEY = '@layrate_server_url';
+const SERVICE_NAME = 'Layrate Server';
+const SCAN_TIMEOUT = 4000;
 
-async function probeIp(ip: string, timeoutMs = 800): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
-    const resp = await fetch(`http://${ip}:5000/api/ping`, {
-      signal: controller.signal,
+/**
+ * Discover the Layrate server on the LAN via mDNS (zeroconf).
+ * Resolves with the base URL (e.g. "http://192.168.1.100:5000") or null.
+ */
+export function discoverServer(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const zc = new Zeroconf();
+    const timer = setTimeout(() => {
+      zc.stop();
+      zc.removeDeviceListeners();
+      resolve(null);
+    }, SCAN_TIMEOUT);
+
+    zc.on('resolved', (service: any) => {
+      if (service.name === SERVICE_NAME) {
+        clearTimeout(timer);
+        zc.stop();
+        zc.removeDeviceListeners();
+        const ip = service.host || (service.addresses && service.addresses[0]);
+        if (ip) {
+          resolve(`http://${ip}:${service.port}`);
+        } else {
+          resolve(null);
+        }
+      }
     });
-    clearTimeout(id);
-    return resp.ok;
-  } catch {
-    return false;
-  }
-}
 
-async function scanSubnet(deviceIp: string): Promise<string | null> {
-  const parts = deviceIp.split('.');
-  if (parts.length !== 4) return null;
-  const subnet = parts.slice(0, 3).join('.');
+    zc.on('error', () => {
+      clearTimeout(timer);
+      zc.stop();
+      zc.removeDeviceListeners();
+      resolve(null);
+    });
 
-  const candidates = Array.from({ length: 254 }, (_, i) => `${subnet}.${i + 1}`);
-
-  const results = await Promise.allSettled(
-    candidates.map(async (ip) => {
-      const ok = await probeIp(ip);
-      return ok ? ip : null;
-    })
-  );
-
-  for (const r of results) {
-    if (r.status === 'fulfilled' && r.value) {
-      return `http://${r.value}:5000`;
-    }
-  }
-  return null;
-}
-
-export async function discoverServer(): Promise<string | null> {
-  try {
-    const deviceIp = await Network.getIpAddressAsync();
-    if (!deviceIp || deviceIp === '0.0.0.0' || deviceIp.startsWith('127.')) {
-      return null;
-    }
-    return await scanSubnet(deviceIp);
-  } catch {
-    return null;
-  }
+    zc.scan('http', 'tcp', 'local.');
+  });
 }
 
 export async function getSavedServerUrl(): Promise<string | null> {
