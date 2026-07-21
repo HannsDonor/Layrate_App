@@ -39,7 +39,7 @@ const FILE_MAP = [
 ];
 
 const withAndroidWidget = (config) => {
-  return withDangerousMod(config, ['android'], async (config) => {
+  return withDangerousMod(config, ['android', async (config) => {
     const androidRoot = config.modRequest.platformProjectRoot;
     const templatesRoot = path.join(config.modRequest.projectRoot, TEMPLATES_DIR);
 
