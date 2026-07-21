@@ -51,7 +51,10 @@ export default function LoginScreen() {
     setTestStatus('testing');
     setTestResult('');
     try {
-      const res = await fetch(`${url}/api/ping`, { method: 'GET', signal: AbortSignal.timeout(5000) });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(`${url}/api/ping`, { method: 'GET', signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (res.ok && data.ok) {
         setTestStatus('ok');
