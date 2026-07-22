@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -41,15 +41,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState('');
-  const [showServerInput, setShowServerInput] = useState(false);
-  const [discoveryStatus, setDiscoveryStatus] = useState<'scanning' | 'found' | 'saved' | 'idle'>('idle');
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
-  const [testResult, setTestResult] = useState('');
+  const [showDebugMenu, setShowDebugMenu] = useState(false);
+  const [debugStatus, setDebugStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
+  const [debugResult, setDebugResult] = useState('');
 
   const handleTestServer = async () => {
     const url = serverUrl || 'http://192.168.254.107:5000';
-    setTestStatus('testing');
-    setTestResult('');
+    setDebugStatus('testing');
+    setDebugResult('');
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -57,15 +56,15 @@ export default function LoginScreen() {
       clearTimeout(timeoutId);
       const data = await res.json();
       if (res.ok && data.ok) {
-        setTestStatus('ok');
-        setTestResult(`OK (${res.status})`);
+        setDebugStatus('ok');
+        setDebugResult(`OK (${res.status})`);
       } else {
-        setTestStatus('fail');
-        setTestResult(`Response ${res.status}`);
+        setDebugStatus('fail');
+        setDebugResult(`Response ${res.status}`);
       }
     } catch (e: any) {
-      setTestStatus('fail');
-      setTestResult(e.message || 'Network error');
+      setDebugStatus('fail');
+      setDebugResult(e.message || 'Network error');
     }
   };
 
@@ -94,21 +93,17 @@ export default function LoginScreen() {
       const saved = await getSavedServerUrl();
       if (saved) {
         setServerUrl(saved);
-        setDiscoveryStatus('saved');
         setApiBaseUrl(saved);
         return;
       }
-      setDiscoveryStatus('scanning');
       const found = await discoverServer();
       if (found) {
         setServerUrl(found);
-        setDiscoveryStatus('found');
         setApiBaseUrl(found);
         saveServerUrl(found);
       } else {
         const fallback = 'http://192.168.254.107:5000';
         setServerUrl(fallback);
-        setDiscoveryStatus('idle');
         setApiBaseUrl(fallback);
       }
     })();
@@ -170,7 +165,11 @@ export default function LoginScreen() {
           ))}
         </View>
 
-        <View className="absolute inset-0 items-center justify-center pb-10">
+        <Pressable
+          onLongPress={() => { if (__DEV__) setShowDebugMenu((v) => !v); }}
+          delayLongPress={800}
+          className="absolute inset-0 items-center justify-center pb-10 active:opacity-80"
+        >
           <Text
             className="text-white text-5xl font-black tracking-[6px]"
             style={{ fontFamily: 'serif', textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 4 }}
@@ -183,7 +182,7 @@ export default function LoginScreen() {
           >
             Live Monitoring App
           </Text>
-        </View>
+        </Pressable>
       </View>
 
       <DotPattern color="rgba(200,200,210,0.18)" />
@@ -239,51 +238,34 @@ export default function LoginScreen() {
           <Text className="text-accent text-sm text-center mb-4">{error}</Text>
         )}
 
-        {/* Server section */}
-        <Pressable onPress={() => setShowServerInput((v) => !v)} className="mb-4 items-center">
-          <Text className="text-[#8e8e93] text-xs underline">
-            {showServerInput ? 'Hide' : 'Server'} —{' '}
-            {discoveryStatus === 'scanning' ? 'Scanning...' :
-             discoveryStatus === 'found' ? `Found ${serverUrl}` :
-             discoveryStatus === 'saved' ? `Saved ${serverUrl}` :
-             'Tap to configure'}
-          </Text>
-        </Pressable>
-        {showServerInput && (
-          <TextInput
-            className="bg-[#F0F0F5] rounded-full px-6 py-[18px] text-base text-ink mb-4"
-            placeholder="e.g. http://192.168.1.100:5000"
-            placeholderTextColor="#a39e98"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            value={serverUrl}
-            onChangeText={(t) => { setServerUrl(t); setDiscoveryStatus('idle'); }}
-            editable={!loading}
-          />
-        )}
-
-        {/* Server URL status + test */}
-        <View className="mb-3 items-center">
-          <Text className={`text-xs ${discoveryStatus === 'found' || discoveryStatus === 'saved' ? 'text-green-600' : 'text-[#8e8e93]'}`}>
-            {discoveryStatus === 'scanning' ? 'Scanning for server...' :
-             discoveryStatus === 'found' ? `Server: ${serverUrl}` :
-             discoveryStatus === 'saved' ? `Server: ${serverUrl}` :
-             `Server: http://192.168.254.107:5000`}
-          </Text>
-          <View className="flex-row items-center mt-1 gap-2">
-            <Pressable onPress={handleTestServer} disabled={testStatus === 'testing'}>
-              <Text className="text-primary text-xs font-semibold underline">
-                {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
-              </Text>
-            </Pressable>
-            {testStatus !== 'idle' && (
-              <Text className={`text-xs ${testStatus === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
-                {testResult}
-              </Text>
-            )}
+        {/* Hidden debug menu (long-press LAYRATE logo in __DEV__) */}
+        {showDebugMenu && (
+          <View className="mb-4">
+            <TextInput
+              className="bg-[#F0F0F5] rounded-full px-6 py-[14px] text-sm text-ink mb-2"
+              placeholder="Server URL"
+              placeholderTextColor="#a39e98"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              value={serverUrl}
+              onChangeText={setServerUrl}
+              editable={!loading}
+            />
+            <View className="flex-row items-center justify-center gap-3">
+              <Pressable onPress={handleTestServer} disabled={debugStatus === 'testing'}>
+                <Text className="text-primary text-xs font-semibold underline">
+                  {debugStatus === 'testing' ? 'Testing...' : 'Test'}
+                </Text>
+              </Pressable>
+              {debugStatus !== 'idle' && (
+                <Text className={`text-xs ${debugStatus === 'ok' ? 'text-green-600' : 'text-red-500'}`}>
+                  {debugResult}
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Login button */}
         <Pressable

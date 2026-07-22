@@ -3,6 +3,7 @@ import { Pressable, View, Text } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchWithAuth, getToken } from '@/utils/auth';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { setAlertCount } from '@/utils/alert-count';
@@ -67,6 +68,7 @@ function QRTabButton({ onPress, accessibilityState }: { onPress?: (...args: any[
 
 export default function TabsGroupLayout() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     getToken().then((token) => {
@@ -93,8 +95,8 @@ export default function TabsGroupLayout() {
       tabBarStyle: {
         backgroundColor: '#ffffff',
         borderTopWidth: 0,
-        height: 104,
-        paddingBottom: 24,
+        height: 60 + insets.bottom,
+        paddingBottom: insets.bottom,
         marginHorizontal: 0,
         elevation: 10,
         shadowColor: '#000',
